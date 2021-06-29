@@ -1,6 +1,7 @@
-package com.codepath.apps.restclienttemplate;
+package com.codepath.apps.restclienttemplate.adapters;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,13 +12,14 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.codepath.apps.restclienttemplate.R;
 import com.codepath.apps.restclienttemplate.models.Tweet;
-
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder>{
+
+    public static final String TAG = "TweetsAdapter";
 
     Context context;
     List<Tweet> tweets;
@@ -50,12 +52,25 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
         return tweets.size();
     }
 
+    // Clean all elements of the recycler
+    public void clear() {
+        tweets.clear();
+        notifyDataSetChanged();
+    }
+
+    // Add a list of items -- change to type used
+    public void addAll(List<Tweet> list) {
+        tweets.addAll(list);
+        notifyDataSetChanged();
+    }
+
     // Define a view holder
     public class ViewHolder extends RecyclerView.ViewHolder {
         ImageView ivProfileImage;
         TextView tvBody;
         TextView tvScreenName;
         TextView tvTime;
+        ImageView ivMedia;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -63,6 +78,7 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
             tvBody = itemView.findViewById(R.id.tvBody);
             tvScreenName = itemView.findViewById(R.id.tvScreenName);
             tvTime = itemView.findViewById(R.id.tvTime);
+            ivMedia = itemView.findViewById(R.id.ivMedia);
         }
 
         public void bind(Tweet tweet) {
@@ -70,6 +86,14 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
             tvScreenName.setText(tweet.user.screenName);
             tvTime.setText(tweet.getRelativeTimeAgo());
             Glide.with(context).load(tweet.user.profileImageUrl).into(ivProfileImage);
+            if (tweet.mediaUrl != null) {
+                Log.d(TAG, "Loading image: " + tweet.mediaUrl);
+                Glide.with(context).load(tweet.mediaUrl).into(ivMedia);
+                ivMedia.setVisibility(View.VISIBLE);
+            } else {
+                Log.d(TAG, "No image: " + tweet.mediaUrl);
+                ivMedia.setVisibility(View.GONE);
+            }
         }
     }
 }
