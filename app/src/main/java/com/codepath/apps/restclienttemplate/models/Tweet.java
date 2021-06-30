@@ -17,10 +17,13 @@ import java.util.Locale;
 public class Tweet {
 
     public static final String TAG = "Tweet";
+    public User user;
     public String body;
     public String createdAt;
-    public User user;
     public String mediaUrl = null;
+
+    public int retweetCount;
+    public int likeCount;
 
     public Tweet() {}
 
@@ -34,6 +37,9 @@ public class Tweet {
         if (entities.has("media")) {
             tweet.mediaUrl = entities.getJSONArray("media").getJSONObject(0).getString("media_url_https");
         }
+
+        tweet.retweetCount = jsonObject.getInt("retweet_count");
+        tweet.likeCount = jsonObject.getInt("favorite_count");
 
         return tweet;
     }
@@ -63,21 +69,15 @@ public class Tweet {
             final long diff = now - time;
             if (diff < MINUTE_MILLIS) {
                 return "just now";
-            } else if (diff < 2 * MINUTE_MILLIS) {
-                return "a minute ago";
             } else if (diff < 50 * MINUTE_MILLIS) {
                 return diff / MINUTE_MILLIS + " m";
-            } else if (diff < 90 * MINUTE_MILLIS) {
-                return "an hour ago";
             } else if (diff < 24 * HOUR_MILLIS) {
                 return diff / HOUR_MILLIS + " h";
-            } else if (diff < 48 * HOUR_MILLIS) {
-                return "yesterday";
             } else {
                 return diff / DAY_MILLIS + " d";
             }
         } catch (ParseException e) {
-            Log.i(TAG, "getRelativeTimeAgo failed");
+            Log.e(TAG, "getRelativeTimeAgo failed");
             e.printStackTrace();
         }
 

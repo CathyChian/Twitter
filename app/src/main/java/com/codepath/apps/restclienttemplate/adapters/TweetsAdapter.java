@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.codepath.apps.restclienttemplate.R;
+import com.codepath.apps.restclienttemplate.databinding.ItemTweetBinding;
 import com.codepath.apps.restclienttemplate.models.Tweet;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
 
     Context context;
     List<Tweet> tweets;
+    ItemTweetBinding binding;
 
     // Pass in the context and list of tweets
     public TweetsAdapter(Context context, List<Tweet> tweets) {
@@ -34,7 +36,8 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_tweet, parent, false);
+        binding = ItemTweetBinding.inflate(LayoutInflater.from(context), parent, false);
+        View view = binding.getRoot();
         return new ViewHolder(view);
     }
 
@@ -66,34 +69,32 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
 
     // Define a view holder
     public class ViewHolder extends RecyclerView.ViewHolder {
-        ImageView ivProfileImage;
-        TextView tvBody;
-        TextView tvScreenName;
-        TextView tvTime;
-        ImageView ivMedia;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            ivProfileImage = itemView.findViewById(R.id.ivProfileImage);
-            tvBody = itemView.findViewById(R.id.tvBody);
-            tvScreenName = itemView.findViewById(R.id.tvScreenName);
-            tvTime = itemView.findViewById(R.id.tvTime);
-            ivMedia = itemView.findViewById(R.id.ivMedia);
         }
 
         public void bind(Tweet tweet) {
-            tvBody.setText(tweet.body);
-            tvScreenName.setText(tweet.user.screenName);
-            tvTime.setText(tweet.getRelativeTimeAgo());
-            Glide.with(context).load(tweet.user.profileImageUrl).into(ivProfileImage);
+            Glide.with(context).load(tweet.user.profileImageUrl).into(binding.ivProfileImage);
+            binding.tvBody.setText(tweet.body);
+            binding.tvName.setText(tweet.user.name);
+            binding.tvScreenName.setText(tweet.user.screenName);
+            binding.tvTime.setText(tweet.getRelativeTimeAgo());
+
             if (tweet.mediaUrl != null) {
                 Log.d(TAG, "Loading image: " + tweet.mediaUrl);
-                Glide.with(context).load(tweet.mediaUrl).into(ivMedia);
-                ivMedia.setVisibility(View.VISIBLE);
+                Glide.with(context).load(tweet.mediaUrl).into(binding.ivMedia);
+                binding.ivMedia.setVisibility(View.VISIBLE);
             } else {
                 Log.d(TAG, "No image: " + tweet.mediaUrl);
-                ivMedia.setVisibility(View.GONE);
+                binding.ivMedia.setVisibility(View.GONE);
             }
+
+            Glide.with(context).load(R.drawable.twitter_reply).into(binding.ivReply);
+            Glide.with(context).load(R.drawable.ic_retweet_twitter).into(binding.ivRetweet);
+            Glide.with(context).load(R.drawable.ic_like_twitter).into(binding.ivLike);
+            binding.tvRetweetCount.setText(tweet.retweetCount);
+            binding.tvLikeCount.setText(tweet.likeCount);
         }
     }
 }

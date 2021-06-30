@@ -29,7 +29,6 @@ public class ComposeActivity extends AppCompatActivity {
 
     EditText etCompose;
     Button btnTweet;
-    TextInputLayout counter;
 
     TwitterClient client;
 
