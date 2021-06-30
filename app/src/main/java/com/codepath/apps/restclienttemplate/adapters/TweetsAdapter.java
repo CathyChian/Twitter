@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -17,6 +18,8 @@ import com.codepath.apps.restclienttemplate.databinding.ItemTweetBinding;
 import com.codepath.apps.restclienttemplate.models.Tweet;
 
 import java.util.List;
+
+import jp.wasabeef.glide.transformations.RoundedCornersTransformation;
 
 public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder>{
 
@@ -30,6 +33,7 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
     public TweetsAdapter(Context context, List<Tweet> tweets) {
         this.context = context;
         this.tweets = tweets;
+        setHasStableIds(true);
     }
 
     // For each row, inflate a layout
@@ -55,6 +59,16 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
         return tweets.size();
     }
 
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position;
+    }
+
     // Clean all elements of the recycler
     public void clear() {
         tweets.clear();
@@ -75,7 +89,7 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
         }
 
         public void bind(Tweet tweet) {
-            Glide.with(context).load(tweet.user.profileImageUrl).into(binding.ivProfileImage);
+            Glide.with(context).load(tweet.user.profileImageUrl).circleCrop().into(binding.ivProfileImage);
             binding.tvBody.setText(tweet.body);
             binding.tvName.setText(tweet.user.name);
             binding.tvScreenName.setText(tweet.user.screenName);
@@ -83,18 +97,34 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
 
             if (tweet.mediaUrl != null) {
                 Log.d(TAG, "Loading image: " + tweet.mediaUrl);
-                Glide.with(context).load(tweet.mediaUrl).into(binding.ivMedia);
+                Glide.with(context)
+                    .load(tweet.mediaUrl)
+                    .transform(new RoundedCornersTransformation(60, 0))
+                    .into(binding.ivMedia);
                 binding.ivMedia.setVisibility(View.VISIBLE);
             } else {
                 Log.d(TAG, "No image: " + tweet.mediaUrl);
                 binding.ivMedia.setVisibility(View.GONE);
             }
 
-            Glide.with(context).load(R.drawable.twitter_reply).into(binding.ivReply);
-            Glide.with(context).load(R.drawable.ic_retweet_twitter).into(binding.ivRetweet);
-            Glide.with(context).load(R.drawable.ic_like_twitter).into(binding.ivLike);
-            binding.tvRetweetCount.setText(tweet.retweetCount);
-            binding.tvLikeCount.setText(tweet.likeCount);
+            Glide.with(context).load(R.drawable.ic_vector_reply).into(binding.ivReply);
+            binding.tvRetweetCount.setText(String.valueOf(tweet.retweetCount));
+            binding.tvLikeCount.setText(String.valueOf(tweet.likeCount));
+
+            if (tweet.retweeted) {
+                Glide.with(context).load(R.drawable.ic_vector_retweet).into(binding.ivRetweet);
+                binding.tvRetweetCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action_retweet));
+            } else {
+                Glide.with(context).load(R.drawable.ic_vector_retweet_stroke).into(binding.ivRetweet);
+                binding.tvRetweetCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action));
+            }
+            if (tweet.liked) {
+                Glide.with(context).load(R.drawable.ic_vector_heart).into(binding.ivLike);
+                binding.tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action_like));
+            } else {
+                Glide.with(context).load(R.drawable.ic_vector_heart_stroke).into(binding.ivLike);
+                binding.tvRetweetCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action));
+            }
         }
     }
 }

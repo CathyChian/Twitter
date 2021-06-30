@@ -2,6 +2,7 @@ package com.codepath.apps.restclienttemplate.activities;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -59,6 +60,7 @@ public class TimelineActivity extends AppCompatActivity {
         binding.rvTweets.setLayoutManager(new LinearLayoutManager(this));
         binding.rvTweets.setAdapter(adapter);
 
+        binding.rvTweets.addItemDecoration(new DividerItemDecoration(binding.rvTweets.getContext(), DividerItemDecoration.VERTICAL));
         populateHomeTimeline();
 
         // Setup refresh listener which triggers new data loading

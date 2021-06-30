@@ -25,6 +25,9 @@ public class Tweet {
     public int retweetCount;
     public int likeCount;
 
+    public boolean retweeted;
+    public boolean liked;
+
     public Tweet() {}
 
     public static Tweet fromJson(JSONObject jsonObject) throws JSONException {
@@ -40,6 +43,10 @@ public class Tweet {
 
         tweet.retweetCount = jsonObject.getInt("retweet_count");
         tweet.likeCount = jsonObject.getInt("favorite_count");
+
+
+        tweet.retweeted = jsonObject.getBoolean("retweeted");
+        tweet.liked = jsonObject.getBoolean("favorited");
 
         return tweet;
     }
@@ -68,13 +75,13 @@ public class Tweet {
 
             final long diff = now - time;
             if (diff < MINUTE_MILLIS) {
-                return "just now";
-            } else if (diff < 50 * MINUTE_MILLIS) {
-                return diff / MINUTE_MILLIS + " m";
+                return diff / SECOND_MILLIS + "s";
+            } else if (diff < 60 * MINUTE_MILLIS) {
+                return diff / MINUTE_MILLIS + "m";
             } else if (diff < 24 * HOUR_MILLIS) {
-                return diff / HOUR_MILLIS + " h";
+                return diff / HOUR_MILLIS + "h";
             } else {
-                return diff / DAY_MILLIS + " d";
+                return diff / DAY_MILLIS + "d";
             }
         } catch (ParseException e) {
             Log.e(TAG, "getRelativeTimeAgo failed");
