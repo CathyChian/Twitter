@@ -70,10 +70,11 @@ public class TimelineActivity extends AppCompatActivity implements ComposeDialog
         binding.swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                showProgressBar();
                 // Your code to refresh the list here.
                 // Make sure you call swipeContainer.setRefreshing(false)
                 // once the network request has completed successfully.
-                fetchTimelineAsync(0);
+                populateHomeTimeline();
             }
         });
         // Configure the refreshing colors
@@ -137,8 +138,10 @@ public class TimelineActivity extends AppCompatActivity implements ComposeDialog
                 Log.i(TAG, "onSuccess! " + json.toString());
                 JSONArray jsonArray = json.jsonArray;
                 try {
-                    tweets.addAll(Tweet.fromJsonArray(jsonArray));
-                    adapter.notifyDataSetChanged();
+                    adapter.clear();
+                    adapter.addAll(Tweet.fromJsonArray(jsonArray));
+                    binding.swipeContainer.setRefreshing(false);
+                    hideProgressBar();
                 } catch (JSONException e) {
                     Log.e(TAG, "Json exception", e);
                 }
@@ -153,32 +156,25 @@ public class TimelineActivity extends AppCompatActivity implements ComposeDialog
 
     public void fetchTimelineAsync(int page) {
         showProgressBar();
-        // Send the network request to fetch the updated data
-        // `client` here is an instance of Android Async HTTP
-        // getHomeTimeline is an example endpoint.
         client.getHomeTimeline(new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Headers headers, JSON json) {
-                Log.i(TAG, "Fetch timeline success: " + json.toString());
-                JSONArray jsonArray = json.jsonArray;
-                try {
-                    // Remember to CLEAR OUT old items before appending in the new ones
-                    adapter.clear();
-                    // ...the data has come back, add new items to your adapter...
-                    adapter.addAll(Tweet.fromJsonArray(jsonArray));
-                    // Now we call setRefreshing(false) to signal refresh has finished
-                    binding.swipeContainer.setRefreshing(false);
-                } catch (JSONException e) {
-                    Log.e(TAG, "Json exception", e);
-                }
+                // Remember to CLEAR OUT old items before appending in the new ones
+                adapter.clear();
+                // ...the data has come back, add new items to your adapter...
+                adapter.addAll(tweets);
+                populateHomeTimeline();
+                // Now we call setRefreshing(false) to signal refresh has finished
+                binding.swipeContainer.setRefreshing(false);
                 hideProgressBar();
+
             }
 
             @Override
             public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
-                Log.e(TAG, "Fetch timeline error: " + response, throwable);
-                hideProgressBar();
+                Log.d("DEBUG", "Fetch timeline error: " + response);
             }
+
         });
     }
 

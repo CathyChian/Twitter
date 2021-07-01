@@ -34,7 +34,7 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
     List<Tweet> tweets;
     ItemTweetBinding binding;
     TwitterClient client;
-    Tweet tweet;
+    //Tweet tweet;
     int position;
 
     // Pass in the context and list of tweets
@@ -43,74 +43,19 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
         this.tweets = tweets;
     }
 
+    public interface clickListener {
+        void onReply(int p);
+        void onRetweet(int p);
+        void onLike(int p);
+    }
+
     // For each row, inflate a layout
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         binding = ItemTweetBinding.inflate(LayoutInflater.from(context), parent, false);
         View view = binding.getRoot();
-
-        client = TwitterApp.getRestClient(context);
-        ViewHolder holder = new ViewHolder(view, new clickListener() {
-            @Override
-            public void onReply(int p) {
-                // TODO: implement reply
-            }
-
-            @Override
-            public void onRetweet(int p) {
-                // TODO: implement retweet
-            }
-
-            @Override
-            public void onLike(int p) {
-                tweet = tweets.get(p);
-                String id = tweet.id;
-                tweet.liked = tweet.liked ? false : true;
-                position = p;
-                if (tweet.liked)
-                    client.likeTweet(id, new JsonHttpResponseHandler() {
-                        @Override
-                        public void onSuccess(int statusCode, Headers headers, JSON json) {
-                            Log.i(TAG, "onSuccess to like tweet");
-                            tweet.liked = true;
-
-                            Glide.with(context).load(R.drawable.ic_vector_heart).into(binding.ivLike);
-                            binding.tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action_like));
-
-                            tweet.likeCount++;
-                            binding.tvLikeCount.setText(String.valueOf(tweet.likeCount));
-                            notifyItemChanged(position);
-                        }
-
-                        @Override
-                        public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
-                            Log.i(TAG, "onFailure to like tweet");
-                        }
-                    });
-                else {
-                    client.unlikeTweet(id, new JsonHttpResponseHandler() {
-                        @Override
-                        public void onSuccess(int statusCode, Headers headers, JSON json) {
-                            Log.i(TAG, "onSuccess to like tweet");
-                            tweet.liked = false;
-
-                            Glide.with(context).load(R.drawable.ic_vector_heart_stroke).into(binding.ivLike);
-                            binding.tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action));
-
-                            tweet.likeCount--;
-                            binding.tvLikeCount.setText(String.valueOf(tweet.likeCount));
-                            notifyItemChanged(position);
-                        }
-
-                        @Override
-                        public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
-                            Log.i(TAG, "onFailure to like tweet");
-                        }
-                    });
-                }
-            }
-        });
+        ViewHolder holder = new ViewHolder(view);
         return holder;
     }
 
@@ -120,7 +65,8 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
         // Get the data at position
         Tweet tweet = tweets.get(position);
         // Bind the tweet with the view holder
-        holder.bind(tweet);
+        holder.setCurrentTweet(tweet);
+        holder.bind();
     }
 
     @Override
@@ -152,77 +98,154 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
 
 
     // Define a view holder
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder{
 
-        clickListener listener;
+        TextView tvBody;
+        TextView tvName;
+        TextView tvScreenName;
+        TextView tvTime;
+        TextView tvRetweetCount;
+        TextView tvLikeCount;
+        ImageView ivProfileImage;
+        ImageView ivMedia;
+        ImageView ivReply;
+        ImageView ivRetweet;
+        ImageView ivLike;
 
-        public ViewHolder(@NonNull View itemView, clickListener listener) {
+        Tweet currTweet;
+
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            this.listener = listener;
-            binding.ivReply.setOnClickListener(this);
-            binding.ivRetweet.setOnClickListener(this);
-            binding.ivLike.setOnClickListener(this);
+
+            this.tvBody = binding.tvBody;
+            this.tvName = binding.tvName;
+            this.tvScreenName = binding.tvScreenName;
+            this.tvTime = binding.tvTime;
+            this.tvRetweetCount = binding.tvRetweetCount;
+            this.tvLikeCount = binding.tvLikeCount;
+            this.ivProfileImage = binding.ivProfileImage;
+            this.ivMedia = binding.ivMedia;
+            this.ivReply = binding.ivReply;
+            this.ivRetweet = binding.ivRetweet;
+            this.ivLike = binding.ivLike;
+            client = TwitterApp.getRestClient(context);
         }
 
-        public void bind(Tweet tweet) {
-            Glide.with(context).load(tweet.user.profileImageUrl).circleCrop().into(binding.ivProfileImage);
-            binding.tvBody.setText(tweet.body);
-            binding.tvName.setText(tweet.user.name);
-            binding.tvScreenName.setText(tweet.user.screenName);
-            binding.tvTime.setText(tweet.getRelativeTimeAgo());
+        public void setCurrentTweet(Tweet tweet){
+            this.currTweet = tweet;
+        }
+        public void bind() {
+            if(currTweet != null) {
+                Log.d(TAG, currTweet.body);
+                Glide.with(context).load(currTweet.user.profileImageUrl).circleCrop().into(ivProfileImage);
+                tvBody.setText(currTweet.body);
+                tvName.setText(currTweet.user.name);
+                tvScreenName.setText(currTweet.user.screenName);
+                tvTime.setText(currTweet.getRelativeTimeAgo());
 
-            if (tweet.mediaUrl != null) {
-                Log.d(TAG, "Loading image: " + tweet.mediaUrl);
-                Glide.with(context)
-                    .load(tweet.mediaUrl)
-                    .transform(new RoundedCornersTransformation(60, 0))
-                    .into(binding.ivMedia);
-                binding.ivMedia.setVisibility(View.VISIBLE);
-            } else {
-                Log.d(TAG, "No image: " + tweet.mediaUrl);
-                binding.ivMedia.setVisibility(View.GONE);
-            }
+                if (currTweet.mediaUrl != null) {
+                    Log.d(TAG, "Loading image: " + currTweet.mediaUrl);
+                    Glide.with(context)
+                            .load(currTweet.mediaUrl)
+                            .transform(new RoundedCornersTransformation(60, 0))
+                            .into(ivMedia);
+                    ivMedia.setVisibility(View.VISIBLE);
+                } else {
+                    Log.d(TAG, "No image: " + currTweet.mediaUrl);
+                    ivMedia.setVisibility(View.GONE);
+                }
 
-            Glide.with(context).load(R.drawable.ic_vector_reply).into(binding.ivReply);
-            binding.tvRetweetCount.setText(String.valueOf(tweet.retweetCount));
-            binding.tvLikeCount.setText(String.valueOf(tweet.likeCount));
+                Glide.with(context).load(R.drawable.ic_vector_reply).into(ivReply);
+                tvRetweetCount.setText(String.valueOf(currTweet.retweetCount));
+                tvLikeCount.setText(String.valueOf(currTweet.likeCount));
 
-            if (tweet.retweeted) {
-                Glide.with(context).load(R.drawable.ic_vector_retweet).into(binding.ivRetweet);
-                binding.tvRetweetCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action_retweet));
-            } else {
-                Glide.with(context).load(R.drawable.ic_vector_retweet_stroke).into(binding.ivRetweet);
-                binding.tvRetweetCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action));
-            }
-            if (tweet.liked) {
-                Glide.with(context).load(R.drawable.ic_vector_heart).into(binding.ivLike);
-                binding.tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action_like));
-            } else {
-                Glide.with(context).load(R.drawable.ic_vector_heart_stroke).into(binding.ivLike);
-                binding.tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action));
+                if (currTweet.retweeted) {
+                    Glide.with(context).load(R.drawable.ic_vector_retweet).into(ivRetweet);
+                    tvRetweetCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action_retweet));
+                } else {
+                    Glide.with(context).load(R.drawable.ic_vector_retweet_stroke).into(ivRetweet);
+                    tvRetweetCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action));
+                }
+                if (currTweet.liked) {
+                    Glide.with(context).load(R.drawable.ic_vector_heart).into(ivLike);
+                    tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action_like));
+                } else {
+                    Glide.with(context).load(R.drawable.ic_vector_heart_stroke).into(ivLike);
+                    tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action));
+                }
+
+                ivReply.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onReply();
+                    }
+                });
+                ivRetweet.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onRetweet();
+                    }
+                });
+                ivLike.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        onLike();
+                    }
+                });
             }
         }
 
-        @Override
-        public void onClick(View view) {
-            switch (view.getId()) {
-                case R.id.ivReply:
-                    listener.onReply(this.getLayoutPosition());
-                    break;
-                case R.id.ivRetweet:
-                    listener.onRetweet(this.getLayoutPosition());
-                    break;
-                case R.id.ivLike:
-                    listener.onLike(this.getLayoutPosition());
-                    break;
-                default:
-                    break;
+        public void onReply() {
+            // TODO: implement reply
+        }
+
+        public void onRetweet() {
+            // TODO: implement retweet
+        }
+
+        public void onLike() {
+            if(currTweet != null) {
+                String id = currTweet.id;
+                currTweet.liked = !currTweet.liked;
+
+                if (currTweet.liked)
+                    client.likeTweet(id, new JsonHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Headers headers, JSON json) {
+                            Log.i(TAG, "onSuccess to like tweet");
+
+                            Glide.with(context).load(R.drawable.ic_vector_heart).into(ivLike);
+                            tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action_like));
+
+                            currTweet.likeCount++;
+                            tvLikeCount.setText(String.valueOf(currTweet.likeCount));
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
+                            Log.i(TAG, "onFailure to like tweet");
+                        }
+                    });
+                else {
+                    client.unlikeTweet(id, new JsonHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Headers headers, JSON json) {
+                            Log.i(TAG, "onSuccess to like tweet");
+
+                            Glide.with(context).load(R.drawable.ic_vector_heart_stroke).into(ivLike);
+                            tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action));
+
+                            currTweet.likeCount--;
+                            tvLikeCount.setText(String.valueOf(currTweet.likeCount));
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
+                            Log.i(TAG, "onFailure to like tweet");
+                        }
+                    });
+                }
             }
         }
-    }
-    public interface clickListener {
-        void onReply(int p);
-        void onRetweet(int p);
-        void onLike(int p);
     }
 }
