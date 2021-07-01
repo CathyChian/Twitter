@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="medium_green">#ff17bf63</color>
-    <color name="medium_gray">#ffaab8c2</color>
-    <color name="medium_gray_30">#4daab8c2</color>
-    <color name="medium_gray_50">#80aab8c2</color>
+    <color name="medium_gray">#ff778899</color>
+    <color name="medium_gray_30">#4d778899</color>
+    <color name="medium_gray_50">#80778899</color>
     <color name="light_gray">#ffccd6dd</color>
     <color name="medium_red">#ffe0245e</color>
     <color name="medium_red_30">#4de0245e</color>

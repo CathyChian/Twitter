@@ -2,9 +2,9 @@ package com.codepath.apps.restclienttemplate.activities;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
@@ -13,7 +13,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
+import com.codepath.apps.restclienttemplate.models.ComposeDialogFragment;
 import com.codepath.apps.restclienttemplate.R;
 import com.codepath.apps.restclienttemplate.adapters.TweetsAdapter;
 import com.codepath.apps.restclienttemplate.TwitterApp;
@@ -31,7 +33,7 @@ import java.util.List;
 
 import okhttp3.Headers;
 
-public class TimelineActivity extends AppCompatActivity {
+public class TimelineActivity extends AppCompatActivity implements ComposeDialogFragment.ComposeDialogListener {
 
     public static final String TAG = "TimelineActivity";
     private final int REQUEST_CODE = 20;
@@ -51,6 +53,7 @@ public class TimelineActivity extends AppCompatActivity {
         View view = binding.getRoot();
         setContentView(view);
 
+        setSupportActionBar(binding.toolbar);
         client = TwitterApp.getRestClient(this);
 
         // Init the list of tweets and adapter
@@ -98,12 +101,18 @@ public class TimelineActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.compose) {
-            // Navigate to the compose activity
-            Intent intent = new Intent(this, ComposeActivity.class);
-            startActivityForResult(intent, REQUEST_CODE);
+            showComposeDialog();
+            return true;
+        }
+        if (item.getItemId() == R.id.logout) {
+            logout();
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onComposeResult(int requestCode, int resultCode, @Nullable Intent data) {
+        onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -116,7 +125,7 @@ public class TimelineActivity extends AppCompatActivity {
             tweets.add(0, tweet);
             // Update the adapter
             adapter.notifyItemInserted(0);
-            binding.rvTweets.smoothScrollToPosition(0);
+            binding.rvTweets.scrollToPosition(0);
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -173,6 +182,12 @@ public class TimelineActivity extends AppCompatActivity {
         });
     }
 
+    private void showComposeDialog() {
+        FragmentManager fm = getSupportFragmentManager();
+        ComposeDialogFragment composeDialogFragment = ComposeDialogFragment.newInstance("Tweet");
+        composeDialogFragment.show(fm, "fragment_compose");
+    }
+
     public void showProgressBar() {
         // Show progress item
         miActionProgressItem.setVisible(true);
@@ -183,7 +198,7 @@ public class TimelineActivity extends AppCompatActivity {
         miActionProgressItem.setVisible(false);
     }
 
-    public void logout(View view) {
+    public void logout() {
         client.clearAccessToken();
         finish();
     }

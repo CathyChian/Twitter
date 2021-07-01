@@ -15,13 +15,13 @@ import com.codepath.apps.restclienttemplate.TwitterApp;
 import com.codepath.apps.restclienttemplate.TwitterClient;
 import com.codepath.apps.restclienttemplate.models.Tweet;
 import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler;
-import com.google.android.material.textfield.TextInputLayout;
 
 import org.json.JSONException;
 import org.parceler.Parcels;
 
 import okhttp3.Headers;
 
+// REPLACED BY DIALOGFRAGMENT
 public class ComposeActivity extends AppCompatActivity {
 
     public static final String TAG = "ComposeActivity";

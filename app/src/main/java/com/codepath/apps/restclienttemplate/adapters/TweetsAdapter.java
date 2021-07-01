@@ -1,6 +1,7 @@
 package com.codepath.apps.restclienttemplate.adapters;
 
 import android.content.Context;
+import android.database.DataSetObserver;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,12 +15,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.codepath.apps.restclienttemplate.R;
+import com.codepath.apps.restclienttemplate.TwitterApp;
+import com.codepath.apps.restclienttemplate.TwitterClient;
 import com.codepath.apps.restclienttemplate.databinding.ItemTweetBinding;
 import com.codepath.apps.restclienttemplate.models.Tweet;
+import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler;
 
 import java.util.List;
 
 import jp.wasabeef.glide.transformations.RoundedCornersTransformation;
+import okhttp3.Headers;
 
 public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder>{
 
@@ -28,12 +33,14 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
     Context context;
     List<Tweet> tweets;
     ItemTweetBinding binding;
+    TwitterClient client;
+    Tweet tweet;
+    int position;
 
     // Pass in the context and list of tweets
     public TweetsAdapter(Context context, List<Tweet> tweets) {
         this.context = context;
         this.tweets = tweets;
-        setHasStableIds(true);
     }
 
     // For each row, inflate a layout
@@ -42,7 +49,69 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         binding = ItemTweetBinding.inflate(LayoutInflater.from(context), parent, false);
         View view = binding.getRoot();
-        return new ViewHolder(view);
+
+        client = TwitterApp.getRestClient(context);
+        ViewHolder holder = new ViewHolder(view, new clickListener() {
+            @Override
+            public void onReply(int p) {
+                // TODO: implement reply
+            }
+
+            @Override
+            public void onRetweet(int p) {
+                // TODO: implement retweet
+            }
+
+            @Override
+            public void onLike(int p) {
+                tweet = tweets.get(p);
+                String id = tweet.id;
+                tweet.liked = tweet.liked ? false : true;
+                position = p;
+                if (tweet.liked)
+                    client.likeTweet(id, new JsonHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Headers headers, JSON json) {
+                            Log.i(TAG, "onSuccess to like tweet");
+                            tweet.liked = true;
+
+                            Glide.with(context).load(R.drawable.ic_vector_heart).into(binding.ivLike);
+                            binding.tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action_like));
+
+                            tweet.likeCount++;
+                            binding.tvLikeCount.setText(String.valueOf(tweet.likeCount));
+                            notifyItemChanged(position);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
+                            Log.i(TAG, "onFailure to like tweet");
+                        }
+                    });
+                else {
+                    client.unlikeTweet(id, new JsonHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Headers headers, JSON json) {
+                            Log.i(TAG, "onSuccess to like tweet");
+                            tweet.liked = false;
+
+                            Glide.with(context).load(R.drawable.ic_vector_heart_stroke).into(binding.ivLike);
+                            binding.tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action));
+
+                            tweet.likeCount--;
+                            binding.tvLikeCount.setText(String.valueOf(tweet.likeCount));
+                            notifyItemChanged(position);
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
+                            Log.i(TAG, "onFailure to like tweet");
+                        }
+                    });
+                }
+            }
+        });
+        return holder;
     }
 
     // Bind values based on the position of the element
@@ -81,11 +150,18 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
         notifyDataSetChanged();
     }
 
-    // Define a view holder
-    public class ViewHolder extends RecyclerView.ViewHolder {
 
-        public ViewHolder(@NonNull View itemView) {
+    // Define a view holder
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+        clickListener listener;
+
+        public ViewHolder(@NonNull View itemView, clickListener listener) {
             super(itemView);
+            this.listener = listener;
+            binding.ivReply.setOnClickListener(this);
+            binding.ivRetweet.setOnClickListener(this);
+            binding.ivLike.setOnClickListener(this);
         }
 
         public void bind(Tweet tweet) {
@@ -123,8 +199,30 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
                 binding.tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action_like));
             } else {
                 Glide.with(context).load(R.drawable.ic_vector_heart_stroke).into(binding.ivLike);
-                binding.tvRetweetCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action));
+                binding.tvLikeCount.setTextColor(ContextCompat.getColor(context, R.color.inline_action));
             }
         }
+
+        @Override
+        public void onClick(View view) {
+            switch (view.getId()) {
+                case R.id.ivReply:
+                    listener.onReply(this.getLayoutPosition());
+                    break;
+                case R.id.ivRetweet:
+                    listener.onRetweet(this.getLayoutPosition());
+                    break;
+                case R.id.ivLike:
+                    listener.onLike(this.getLayoutPosition());
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    public interface clickListener {
+        void onReply(int p);
+        void onRetweet(int p);
+        void onLike(int p);
     }
 }

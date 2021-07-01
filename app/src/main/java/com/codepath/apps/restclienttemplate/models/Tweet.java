@@ -18,6 +18,7 @@ public class Tweet {
 
     public static final String TAG = "Tweet";
     public User user;
+    public String id;
     public String body;
     public String createdAt;
     public String mediaUrl = null;
@@ -32,6 +33,7 @@ public class Tweet {
 
     public static Tweet fromJson(JSONObject jsonObject) throws JSONException {
         Tweet tweet = new Tweet();
+        tweet.id = jsonObject.getString("id_str");
         tweet.body = jsonObject.getString("text");
         tweet.createdAt = jsonObject.getString("created_at");
         tweet.user = User.fromJson(jsonObject.getJSONObject("user"));
