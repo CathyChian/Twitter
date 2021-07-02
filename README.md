@@ -42,14 +42,14 @@ The following **optional** features are implemented:
 
 Here's a walkthrough of implemented user stories:
 
-<img src='http://i.imgur.com/link/to/your/gif/file.gif' title='Video Walkthrough' width='' alt='Video Walkthrough' />
+<img src='video/Twitter.gif' title='Video Walkthrough' width='600' alt='Video Walkthrough' />
 
 GIF created with [Kap](https://getkap.co/).
 
 ## Notes
 
 Don't use ViewBinding in your adapter without creating variables or else you will cry.
-* Spent 9 of the 18 hours trying to figure out why my adapter was messing up everything, but turns out it was because I originally didn't want to create variables for each view.
+* Spent 9 of the 18 hours trying to figure out why my adapter was messing up everything, but turns out it was because I was using `binding.` and originally didn't want to create variables for each view.
 
 ## Open-source libraries used
 
