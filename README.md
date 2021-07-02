@@ -2,7 +2,7 @@
 
 **Twitter** is an android app that allows a user to view their Twitter timeline and post a new tweet. The app utilizes [Twitter REST API](https://dev.twitter.com/rest/public).
 
-Time spent: **12** hours spent in total
+Time spent: **18** hours spent in total
 
 ## User Stories
 
@@ -25,10 +25,10 @@ The following **optional** features are implemented:
 
 * [x] User is using **"Twitter branded" colors and styles**
 * [x] User sees an **indeterminate progress indicator** when any background or network task is happening
-* [ ] User can **select "reply" from home timeline to respond to a tweet**
-  * [ ] User that wrote the original tweet is **automatically "@" replied in compose**
+* [x] User can **select "reply" from home timeline to respond to a tweet**
+  * [x] User that wrote the original tweet is **automatically "@" replied in compose**
 * [ ] User can tap a tweet to **open a detailed tweet view**
-  * [ ] User can **take favorite (and unfavorite) or retweet** actions on a tweet
+  * [x] User can **take favorite (and unfavorite) ~~or retweet~~** actions on a tweet
 * [ ] User can view more tweets as they scroll with infinite pagination
 * [x] Compose tweet functionality is built using modal overlay
 * [ ] User can **click a link within a tweet body** on tweet details view. The click will launch the web browser with relevant page opened.
@@ -37,10 +37,6 @@ The following **optional** features are implemented:
 * [x] Use the View Binding library to reduce view boilerplate.
 * [ ] On the Twitter timeline, apply scrolling effects such as [hiding/showing the toolbar](http://guides.codepath.org/android/Using-the-App-ToolBar#reacting-to-scroll) by implementing [CoordinatorLayout](http://guides.codepath.org/android/Handling-Scrolls-with-CoordinatorLayout#responding-to-scroll-events).
 * [ ] User can **open the twitter app offline and see last loaded tweets**. Persisted in SQLite tweets are refreshed on every application launch. While "live data" is displayed when app can get it from Twitter API, it is also saved for use in offline mode.
-
-The following **additional** features are implemented:
-
-* [ ] List anything else that you can get done to improve the app functionality!
 
 ## Video Walkthrough
 
@@ -52,7 +48,8 @@ GIF created with [Kap](https://getkap.co/).
 
 ## Notes
 
-Describe any challenges encountered while building the app.
+Don't use ViewBinding in your adapter without creating variables or else you will cry.
+* Spent 9 of the 18 hours trying to figure out why my adapter was messing up everything, but turns out it was because I originally didn't want to create variables for each view.
 
 ## Open-source libraries used
 

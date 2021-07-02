@@ -4,16 +4,11 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.inputmethod.EditorInfo;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -22,43 +17,43 @@ import androidx.fragment.app.DialogFragment;
 import com.codepath.apps.restclienttemplate.R;
 import com.codepath.apps.restclienttemplate.TwitterApp;
 import com.codepath.apps.restclienttemplate.TwitterClient;
-import com.codepath.apps.restclienttemplate.activities.ComposeActivity;
-import com.codepath.apps.restclienttemplate.activities.TimelineActivity;
-import com.codepath.apps.restclienttemplate.databinding.ActivityTimelineBinding;
-import com.codepath.apps.restclienttemplate.databinding.FragmentComposeBinding;
+import com.codepath.apps.restclienttemplate.databinding.FragmentReplyBinding;
 import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler;
 
 import org.json.JSONException;
+import org.parceler.Parcel;
 import org.parceler.Parcels;
 
 import okhttp3.Headers;
 // ...
 
-public class ComposeDialogFragment extends DialogFragment {
+public class ReplyDialogFragment extends DialogFragment {
 
-    public static final String TAG = "ComposeDialogFragment";
+    public static final String TAG = "ReplyDialogFragment";
     public static final int MAX_TWEET_LENGTH = 280;
-    FragmentComposeBinding binding;
+    FragmentReplyBinding binding;
     private TwitterClient client;
-    public ComposeDialogListener listener;
+    public ReplyDialogListener listener;
+    String screenName, id;
 
-    public ComposeDialogFragment() {
+    public ReplyDialogFragment() {
         // Empty constructor is required for DialogFragment
         // Make sure not to add arguments to the constructor
         // Use `newInstance` instead as shown below
     }
 
-    public static ComposeDialogFragment newInstance(String title) {
-        ComposeDialogFragment frag = new ComposeDialogFragment();
+    public static ReplyDialogFragment newInstance(String screenName, String id) {
+        ReplyDialogFragment frag = new ReplyDialogFragment();
         Bundle args = new Bundle();
-        args.putString("title", title);
+        args.putString("screenName", screenName);
+        args.putString("id", id);
         frag.setArguments(args);
         frag.setStyle(DialogFragment.STYLE_NORMAL, R.style.Dialog_FullScreen);
         return frag;
     }
 
-    public interface ComposeDialogListener {
-        void onComposeResult(int requestCode, int resultCode, @Nullable Intent data);
+    public interface ReplyDialogListener {
+        void onReplyResult(int requestCode, int resultCode, @Nullable Intent data);
     }
 
     @Override
@@ -72,7 +67,7 @@ public class ComposeDialogFragment extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        binding = FragmentComposeBinding.inflate(getActivity().getLayoutInflater());
+        binding = FragmentReplyBinding.inflate(getActivity().getLayoutInflater());
         return binding.getRoot();
     }
 
@@ -80,7 +75,14 @@ public class ComposeDialogFragment extends DialogFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         client = TwitterApp.getRestClient(getActivity());
-        listener = (ComposeDialogListener) getActivity();
+        listener = (ReplyDialogListener) getActivity();
+
+        // Fetch arguments from bundle
+        screenName = getArguments().getString("screenName", "username");
+        id = getArguments().getString("id", "null");
+
+        binding.etCompose.setHint("Replying to " + screenName);
+        binding.etCompose.setText(screenName + " ");
 
         // Show soft keyboard automatically and request focus to field
         binding.etCompose.requestFocus();
@@ -92,7 +94,7 @@ public class ComposeDialogFragment extends DialogFragment {
         binding.btnTweet.setOnClickListener(new View.OnClickListener() {
             @Override
         public void onClick(View view) {
-            String tweetContent = binding.etCompose.getText().toString();
+            final String tweetContent = binding.etCompose.getText().toString();
             if (tweetContent.isEmpty()) {
                 Toast.makeText(getActivity(), "Sorry, your tweet cannot be empty", Toast.LENGTH_LONG).show();
                 return;
@@ -102,10 +104,10 @@ public class ComposeDialogFragment extends DialogFragment {
                 return;
             }
             // Make an API call to Twitter to publish the tweet
-            client.publishTweet(tweetContent, new JsonHttpResponseHandler() {
+            client.replyTweet(tweetContent, id, new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Headers headers, JSON json) {
-                    Log.i(TAG, "onSuccess to publish tweet");
+                    Log.i(TAG, "onSuccess to reply");
                     try {
                         Tweet tweet = Tweet.fromJson(json.jsonObject);
                         Log.i(TAG, "Published tweet says: " + tweet.body);
@@ -113,7 +115,7 @@ public class ComposeDialogFragment extends DialogFragment {
                         intent.putExtra("tweet", Parcels.wrap(tweet));
                         // set result code and bundle data for response
                         getActivity().setResult(getActivity().RESULT_OK, intent);
-                        listener.onComposeResult(20, getActivity().RESULT_OK, intent);
+                        listener.onReplyResult(20, getActivity().RESULT_OK, intent);
                         // close the activity and pass data to parent
                         dismiss();
                     } catch (JSONException e) {
@@ -123,7 +125,7 @@ public class ComposeDialogFragment extends DialogFragment {
 
                 @Override
                 public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
-                    Log.e(TAG, "onFailure to publish tweet. Response: " + response + ", Status code: " + statusCode, throwable);
+                    Log.e(TAG, "onFailure to reply. Content: " + tweetContent + " Response: " + response + ", Status code: " + statusCode, throwable);
                 }
             });
             }
@@ -137,7 +139,7 @@ public class ComposeDialogFragment extends DialogFragment {
         // Assign window properties to fill the parent
         params.width = WindowManager.LayoutParams.MATCH_PARENT;
         params.height = WindowManager.LayoutParams.MATCH_PARENT;
-        getDialog().getWindow().setAttributes((android.view.WindowManager.LayoutParams) params);
+        getDialog().getWindow().setAttributes((WindowManager.LayoutParams) params);
         // Call super onResume after sizing
         super.onResume();
     }

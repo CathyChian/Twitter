@@ -21,6 +21,7 @@ import com.codepath.apps.restclienttemplate.adapters.TweetsAdapter;
 import com.codepath.apps.restclienttemplate.TwitterApp;
 import com.codepath.apps.restclienttemplate.TwitterClient;
 import com.codepath.apps.restclienttemplate.databinding.ActivityTimelineBinding;
+import com.codepath.apps.restclienttemplate.models.ReplyDialogFragment;
 import com.codepath.apps.restclienttemplate.models.Tweet;
 import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler;
 
@@ -33,7 +34,7 @@ import java.util.List;
 
 import okhttp3.Headers;
 
-public class TimelineActivity extends AppCompatActivity implements ComposeDialogFragment.ComposeDialogListener {
+public class TimelineActivity extends AppCompatActivity implements ComposeDialogFragment.ComposeDialogListener, ReplyDialogFragment.ReplyDialogListener {
 
     public static final String TAG = "TimelineActivity";
     private final int REQUEST_CODE = 20;
@@ -116,6 +117,12 @@ public class TimelineActivity extends AppCompatActivity implements ComposeDialog
         onActivityResult(requestCode, resultCode, data);
     }
 
+
+    @Override
+    public void onReplyResult(int requestCode, int resultCode, @Nullable Intent data) {
+        onActivityResult(requestCode, resultCode, data);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
@@ -151,30 +158,6 @@ public class TimelineActivity extends AppCompatActivity implements ComposeDialog
             public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
                 Log.e(TAG, "onFailure! " + response, throwable);
             }
-        });
-    }
-
-    public void fetchTimelineAsync(int page) {
-        showProgressBar();
-        client.getHomeTimeline(new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Headers headers, JSON json) {
-                // Remember to CLEAR OUT old items before appending in the new ones
-                adapter.clear();
-                // ...the data has come back, add new items to your adapter...
-                adapter.addAll(tweets);
-                populateHomeTimeline();
-                // Now we call setRefreshing(false) to signal refresh has finished
-                binding.swipeContainer.setRefreshing(false);
-                hideProgressBar();
-
-            }
-
-            @Override
-            public void onFailure(int statusCode, Headers headers, String response, Throwable throwable) {
-                Log.d("DEBUG", "Fetch timeline error: " + response);
-            }
-
         });
     }
 

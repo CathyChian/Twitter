@@ -2,6 +2,7 @@ package com.codepath.apps.restclienttemplate.adapters;
 
 import android.content.Context;
 import android.database.DataSetObserver;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +11,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -18,8 +21,12 @@ import com.codepath.apps.restclienttemplate.R;
 import com.codepath.apps.restclienttemplate.TwitterApp;
 import com.codepath.apps.restclienttemplate.TwitterClient;
 import com.codepath.apps.restclienttemplate.databinding.ItemTweetBinding;
+import com.codepath.apps.restclienttemplate.models.ComposeDialogFragment;
+import com.codepath.apps.restclienttemplate.models.ReplyDialogFragment;
 import com.codepath.apps.restclienttemplate.models.Tweet;
 import com.codepath.asynchttpclient.callback.JsonHttpResponseHandler;
+
+import org.parceler.Parcels;
 
 import java.util.List;
 
@@ -41,12 +48,6 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
     public TweetsAdapter(Context context, List<Tweet> tweets) {
         this.context = context;
         this.tweets = tweets;
-    }
-
-    public interface clickListener {
-        void onReply(int p);
-        void onRetweet(int p);
-        void onLike(int p);
     }
 
     // For each row, inflate a layout
@@ -196,7 +197,9 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
         }
 
         public void onReply() {
-            // TODO: implement reply
+            FragmentManager fm = ((AppCompatActivity) context).getSupportFragmentManager();
+            ReplyDialogFragment replyDialogFragment = ReplyDialogFragment.newInstance(currTweet.user.screenName, currTweet.id);
+            replyDialogFragment.show(fm, "fragment_reply");
         }
 
         public void onRetweet() {
